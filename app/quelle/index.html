@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d3557">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Noten-Scanner">
+<title>Noten-Scanner</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css?v=__VERSION__">
+</head>
+<body>
+<div id="start">
+<header class="kopf">
+  <h1>Noten-Scanner</h1>
+  <div class="kopf-knoepfe">
+    <button id="knopf-bibliothek" class="symbol" aria-label="Vereins-Bibliothek">📚</button>
+    <button id="knopf-einstellungen" class="symbol" aria-label="Einstellungen">⚙︎</button>
+  </div>
+</header>
+
+<main>
+  <section id="laden" class="hinweis">
+    <div class="kreisel" aria-hidden="true"></div>
+    <div>
+      <strong id="laden-text">App wird vorbereitet …</strong>
+      <div id="laden-detail" class="klein">Beim ersten Start werden ca. 30 MB geladen. Danach funktioniert die App auch ohne Internet.</div>
+      <button id="knopf-erneut" class="knopf versteckt" type="button">Erneut versuchen</button>
+    </div>
+  </section>
+
+  <section id="installieren" class="hinweis versteckt">
+    <div>
+      <strong>Tipp: Als App auf den Home-Bildschirm</strong>
+      <div class="klein">In Safari auf <svg class="teilen-symbol" viewBox="0 0 20 24" width="16" height="19" aria-label="Teilen-Symbol"><path d="M10 1v14M5.5 5.5 10 1l4.5 4.5M6 9H3v13h14V9h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> „Teilen“ tippen, dann „Zum Home-Bildschirm“.</div>
+    </div>
+    <button class="schliessen" data-schliesst="installieren" aria-label="Hinweis schließen">✕</button>
+  </section>
+
+  <section id="letzte-partitur" class="hinweis versteckt">
+    <div>
+      <strong>Zuletzt bearbeitete Noten</strong>
+      <span id="letzte-titel" class="klein"></span>
+    </div>
+    <button id="knopf-letzte" class="knopf">Öffnen</button>
+  </section>
+
+  <section class="aktionen">
+    <label class="knopf gross haupt">
+      <input id="eingabe-kamera" type="file" accept="image/*" capture="environment" hidden>
+      📷 Seite fotografieren
+    </label>
+    <label class="knopf gross">
+      <input id="eingabe-fotos" type="file" accept="image/*" multiple hidden>
+      🖼 Aus Fotos wählen
+    </label>
+  </section>
+
+  <section id="leer" class="leer">
+    <p>Noch keine Seiten. Fotografiere die Notenblätter nacheinander – jede Seite wird sofort bereinigt.</p>
+    <p class="klein">Tipps: Blatt auf dunklen Untergrund legen, ganz ins Bild nehmen, ohne Blitz.</p>
+  </section>
+
+  <ol id="seiten" class="seiten"></ol>
+
+  <section id="bereich-pdf" class="pdf versteckt">
+    <label class="feld">
+      <span>Name des PDFs</span>
+      <input id="pdf-name" type="text" autocomplete="off" enterkeyhint="done">
+    </label>
+    <button id="knopf-pdf" class="knopf gross haupt">📄 PDF erstellen</button>
+    <div id="pdf-ergebnis" class="versteckt">
+      <p id="pdf-info" class="klein"></p>
+      <button id="knopf-teilen" class="knopf gross haupt">Teilen / Sichern …</button>
+      <button id="knopf-ansehen" class="knopf">PDF ansehen</button>
+    </div>
+    <button id="knopf-erkennen" class="knopf gross">🎼 Noten erkennen und neu setzen</button>
+    <p class="klein grau">Liest die Noten (auf dem Vereins-Server), zum Korrigieren, Anhören, Transponieren und für die Bibliothek.</p>
+    <button id="knopf-neu" class="knopf leise">Neues Stück beginnen</button>
+  </section>
+</main>
+</div>
+
+<div id="partitur" class="versteckt">
+  <header class="kopf">
+    <button id="partitur-zurueck" class="symbol" aria-label="Zurück">‹</button>
+    <h1 id="partitur-titel">Partitur</h1>
+    <button id="knopf-partitur-menue" class="symbol" aria-label="Weitere Funktionen">⋯</button>
+  </header>
+  <main class="partitur-haupt">
+    <section id="partitur-fortschritt" class="hinweis versteckt">
+      <div class="kreisel" aria-hidden="true"></div>
+      <div>
+        <strong id="partitur-fortschritt-text"></strong>
+        <span id="partitur-fortschritt-detail" class="klein"></span>
+      </div>
+    </section>
+    <section id="partitur-pruefen" class="pruefleiste versteckt">
+      <span id="partitur-pruefen-text"></span>
+      <button id="knopf-pruefen-weiter" class="knopf">Prüfen ›</button>
+    </section>
+    <p id="partitur-transposition" class="klein grau"></p>
+    <div id="partitur-noten" class="noten"></div>
+    <p class="klein grau partitur-tipp">Tipp: Einen Takt antippen, um ihn mit dem Original zu vergleichen und zu korrigieren –
+      beim Abspielen springt die Wiedergabe zu dem angetippten Takt.
+      <span class="farbe unsicher"></span> unsicher gelesen · <span class="farbe korrigiert"></span> automatisch korrigiert</p>
+  </main>
+  <nav id="partitur-werkzeuge" class="werkzeuge versteckt">
+    <button id="knopf-abspielen" class="knopf">▶ Abspielen</button>
+    <button id="knopf-transponieren" class="knopf">Transponieren</button>
+    <button id="knopf-partitur-pdf" class="knopf">PDF</button>
+    <button id="knopf-speichern" class="knopf haupt">Speichern</button>
+  </nav>
+</div>
+
+<div id="bibliothek" class="versteckt">
+  <header class="kopf">
+    <button id="bibliothek-zurueck" class="symbol" aria-label="Zurück">‹</button>
+    <h1>Vereins-Bibliothek</h1>
+    <span class="symbol" aria-hidden="true"></span>
+  </header>
+  <main>
+    <input id="bibliothek-suche" class="suche" type="search" placeholder="Suchen: Titel, Stimme, Komponist" autocomplete="off">
+    <div id="bibliothek-liste" class="stueckliste"></div>
+  </main>
+</div>
+
+<dialog id="dialog-einstellungen">
+  <form method="dialog">
+    <h2>Einstellungen</h2>
+    <fieldset>
+      <legend>Darstellung</legend>
+      <label class="wahl"><input type="radio" name="modus" value="glatt" checked> <span>Glatt <span class="klein">(sieht am Bildschirm am besten aus)</span></span></label>
+      <label class="wahl"><input type="radio" name="modus" value="hart"> <span>Reines Schwarz/Weiß <span class="klein">(kleinste Dateien)</span></span></label>
+    </fieldset>
+    <label class="schalter"><input type="checkbox" name="linien_reparieren" checked> <span>Notenlinien, Hälse und Taktstriche nachziehen</span></label>
+    <label class="schalter"><input type="checkbox" name="bleistift_entfernen"> <span>Bleistift-Eintragungen entfernen</span></label>
+    <label class="feld">
+      <span>Empfindlichkeit: <output id="wert-empfindlichkeit">0.80</output></span>
+      <input type="range" name="empfindlichkeit" min="0.5" max="0.95" step="0.05" value="0.8">
+      <span class="klein">mehr nach rechts: auch blasser Druck bleibt · nach links: mehr Schmutz verschwindet</span>
+    </label>
+    <fieldset>
+      <legend>Qualität</legend>
+      <label class="wahl"><input type="radio" name="dpi" value="300" checked> <span>Hoch (300 dpi)</span></label>
+      <label class="wahl"><input type="radio" name="dpi" value="200"> <span>Sparsam (200 dpi, schneller, für ältere iPhones)</span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Notenerkennung (Vereins-Server)</legend>
+      <label class="feld"><span>Server-Adresse</span>
+        <input id="server-adresse" type="url" inputmode="url" placeholder="https://name-noten-scanner.hf.space" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label class="feld"><span>Vereinskennwort</span>
+        <input id="server-kennwort" type="password" autocomplete="off"></label>
+      <button id="server-testen" type="button" class="knopf">Verbindung testen</button>
+      <p id="server-status" class="klein"></p>
+    </fieldset>
+    <p id="hinweis-neu" class="klein versteckt">Die Einstellungen gelten für neue Fotos. Bereits bereinigte Seiten kannst du unten neu bereinigen lassen.</p>
+    <div class="zeile">
+      <button id="knopf-neu-bereinigen" class="knopf versteckt" value="neu" type="submit">Alle Seiten neu bereinigen</button>
+      <button class="knopf haupt" value="ok" type="submit">Fertig</button>
+    </div>
+    <p class="klein grau">Noten-Scanner __VERSION__ · Alles wird direkt auf diesem Gerät verarbeitet.</p>
+  </form>
+</dialog>
+
+<dialog id="dialog-ansicht" class="ansicht">
+  <form method="dialog">
+    <div class="ansicht-kopf">
+      <button type="button" id="knopf-umschalten" class="knopf">Vorher</button>
+      <span id="ansicht-titel"></span>
+      <button class="knopf" value="zu">Schließen</button>
+    </div>
+    <img id="ansicht-bild" alt="">
+    <p id="ansicht-infos" class="klein"></p>
+  </form>
+</dialog>
+
+<dialog id="dialog-frage">
+  <form method="dialog">
+    <p id="frage-text"></p>
+    <div class="zeile">
+      <button class="knopf" value="nein">Abbrechen</button>
+      <button class="knopf haupt" value="ja">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dialog-takt" class="blatt">
+  <div class="blatt-kopf">
+    <strong id="takt-titel">Takt</strong>
+    <button id="takt-weiter" type="button" class="knopf leise">Nächster unsicherer ›</button>
+    <button type="button" class="knopf leise" onclick="this.closest('dialog').close()">Fertig</button>
+  </div>
+  <ul id="takt-gruende" class="gruende"></ul>
+  <div class="vergleich">
+    <div><span class="klein grau">Original</span><canvas id="takt-original"></canvas>
+      <p id="takt-original-fehlt" class="klein grau versteckt">Kein Bildausschnitt vorhanden.</p></div>
+    <div><span class="klein grau">Gelesen</span><div id="takt-vorschau" class="vorschau"></div></div>
+  </div>
+  <div id="takt-noten" class="notenchips" aria-label="Noten im Takt"></div>
+  <div id="takt-werkzeug" class="werkzeug">
+    <div class="reihe">
+      <button id="takt-hoch" type="button">▲ höher</button><button id="takt-runter" type="button">▼ tiefer</button>
+      <button type="button" data-alter="-1" aria-label="b">♭</button><button type="button" data-alter="0" aria-label="Auflösungszeichen">♮</button><button type="button" data-alter="1" aria-label="Kreuz">♯</button>
+    </div>
+    <div class="reihe werte" aria-label="Notenwert">
+      <button type="button" data-wert="whole">Ganze</button><button type="button" data-wert="half">Halbe</button><button type="button" data-wert="quarter">Viertel</button><button type="button" data-wert="eighth">Achtel</button><button type="button" data-wert="16th">16tel</button><button type="button" data-wert="32nd">32tel</button>
+    </div>
+    <div class="reihe">
+      <button id="takt-punkt" type="button">Punkt</button><button id="takt-triole" type="button">Triole</button>
+      <button id="takt-pause" type="button" aria-label="Note in Pause umwandeln">→ Pause</button><button id="takt-neu" type="button">+ Note</button><button id="takt-loeschen" type="button" aria-label="Note löschen">🗑</button>
+    </div>
+    <div class="reihe artikulation" aria-label="Artikulation">
+      <button type="button" data-artikulation="staccato" title="Staccato (Punkt)"><b aria-hidden="true">·</b><small>Stacc.</small></button><button type="button" data-artikulation="tenuto" title="Tenuto (Strich)"><b aria-hidden="true">–</b><small>Tenuto</small></button><button type="button" data-artikulation="accent" title="Akzent"><b aria-hidden="true">&gt;</b><small>Akzent</small></button><button type="button" data-artikulation="strong-accent" title="Marcato"><b aria-hidden="true">^</b><small>Marcato</small></button><button type="button" data-artikulation="staccatissimo" title="Staccatissimo (Keil)"><b aria-hidden="true">▾</b><small>Keil</small></button><button type="button" data-artikulation="fermata" title="Fermate"><b aria-hidden="true">𝄐</b><small>Fermate</small></button>
+    </div>
+  </div>
+  <div class="werkzeug">
+    <div class="reihe ganzer-takt" aria-label="Ganzer Takt">
+      <button id="takt-einfuegen" type="button" title="Leeren Takt hinter diesem einfügen">+ Takt danach</button>
+      <button id="takt-entfernen" type="button" title="Diesen Takt löschen">Takt löschen</button>
+      <button id="takt-texte" type="button" title="Textangaben und Studierzeichen in diesem Takt">Text …</button>
+      <span id="takt-pausen" class="pausen versteckt">
+        <button id="takt-pausen-weniger" type="button" aria-label="Ein Pausentakt weniger">−</button>
+        <span><output id="takt-pausen-zahl">1</output> <span id="takt-pausen-wort">Takte</span> Pause</span>
+        <button id="takt-pausen-mehr" type="button" aria-label="Ein Pausentakt mehr">+</button>
+      </span>
+    </div>
+  </div>
+  <div class="zeile takt-fuss">
+    <button id="takt-abspielen" type="button" class="knopf" aria-label="Ab diesem Takt abspielen">▶ Ab hier</button>
+    <button id="takt-rueckgaengig" type="button" class="knopf">↶ Rückgängig</button>
+    <button id="takt-richtig" type="button" class="knopf haupt" aria-label="Takt ist richtig">✓ Stimmt so</button>
+  </div>
+</dialog>
+
+<dialog id="dialog-text">
+  <form method="dialog">
+    <h2 id="text-titel">Texte im Takt</h2>
+    <ul id="text-liste" class="textliste"></ul>
+    <label class="feld"><span>Neuer Text oder Studierzeichen</span>
+      <input name="neu" type="text" maxlength="60" placeholder="z. B. Trio, rit., D.C. al Fine, A" autocomplete="off" autocapitalize="off" enterkeyhint="done"></label>
+    <p class="klein">Der Text steht über der gewählten Note. Ein einzelner Großbuchstabe oder eine Zahl wird als Studierzeichen eingerahmt.</p>
+    <div class="zeile">
+      <button class="knopf" value="nein">Schließen</button>
+      <button class="knopf haupt" value="ok">Hinzufügen</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dialog-transponieren">
+  <form method="dialog">
+    <h2>Transponieren</h2>
+    <label class="feld"><span>Diese Stimme ist geschrieben für</span><select name="von"></select></label>
+    <label class="feld"><span>Anzeigen und drucken für</span><select name="nach"></select></label>
+    <fieldset>
+      <legend>Oktave</legend>
+      <label class="wahl"><input type="radio" name="oktave" value="auto" checked> <span>automatisch <span class="klein">(passende Lage im Notensystem)</span></span></label>
+      <label class="wahl"><input type="radio" name="oktave" value="-1"> <span>eine Oktave tiefer</span></label>
+      <label class="wahl"><input type="radio" name="oktave" value="0"> <span>klingend gleich</span></label>
+      <label class="wahl"><input type="radio" name="oktave" value="1"> <span>eine Oktave höher</span></label>
+    </fieldset>
+    <p class="klein grau">Anzeige, Abspielen und PDF folgen dieser Auswahl. Die Stimme selbst bleibt unverändert.</p>
+    <div class="zeile">
+      <button class="knopf" value="nein">Abbrechen</button>
+      <button class="knopf haupt" value="ok">Übernehmen</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dialog-speichern">
+  <form method="dialog">
+    <h2>In der Vereins-Bibliothek speichern</h2>
+    <label class="feld"><span>Titel</span><input name="titel" type="text" autocomplete="off"></label>
+    <label class="feld"><span>Stimme</span><input name="stimme" type="text" placeholder="z. B. 1. Flügelhorn" autocomplete="off"></label>
+    <label class="feld"><span>Instrument der Stimme</span><select name="instrument"></select></label>
+    <label class="feld"><span>Komponist / Bearbeiter (optional)</span><input name="komponist" type="text" autocomplete="off"></label>
+    <p id="speichern-hinweis" class="klein"></p>
+    <div class="zeile">
+      <button class="knopf" value="nein">Abbrechen</button>
+      <button class="knopf haupt" value="ok">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dialog-menue">
+  <form method="dialog">
+    <h2>Weitere Funktionen</h2>
+    <label class="feld"><span>Tempo beim Abspielen: ♩ = <output id="wert-tempo">100</output></span>
+      <input type="range" name="tempo" min="40" max="240" step="4" value="100"></label>
+    <div class="zeile links">
+      <button id="menue-kleiner" type="button" class="knopf">Noten kleiner</button>
+      <button id="menue-groesser" type="button" class="knopf">Noten größer</button>
+    </div>
+    <button id="menue-musicxml" type="button" class="knopf">MusicXML teilen (für MuseScore)</button>
+    <button id="menue-loeschen" type="button" class="knopf gefahr versteckt">Aus der Bibliothek löschen</button>
+    <div class="zeile"><button class="knopf haupt" value="zu">Schließen</button></div>
+  </form>
+</dialog>
+
+<div id="meldung" class="meldung" role="status" aria-live="polite"></div>
+
+<script src="notenxml.js?v=__VERSION__"></script>
+<script src="instrumente.js?v=__VERSION__"></script>
+<script src="klang.js?v=__VERSION__"></script>
+<script src="app.js?v=__VERSION__"></script>
+<script src="partitur.js?v=__VERSION__"></script>
+</body>
+</html>

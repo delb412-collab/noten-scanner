@@ -1,0 +1,14 @@
+# Notenerkennung (AGPL-3.0), auf den getesteten Stand festgelegt
+homr @ git+https://github.com/liebharc/homr@2d7e8c3b500ab9af10e579bebab8c0d9e551eb71
+onnxruntime==1.31.1
+numpy==2.5.4
+opencv-python-headless==4.14.0.94
+rapidocr==3.10.0
+# Server, Notensatz, Bibliothek
+fastapi==0.162.0
+uvicorn==0.54.0
+python-multipart==0.0.33
+verovio==6.4.0
+CairoSVG==2.9.1
+pypdf==6.21.4
+huggingface_hub==2.4.0

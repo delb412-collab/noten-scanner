@@ -1,0 +1,48 @@
+# Überträgt den Server (Notenerkennung, Notensatz, Bibliothek) in den Hugging-Face-Space.
+# Einmalig im GitHub-Repository einrichten (Settings → Secrets and variables → Actions):
+#   Secret   HF_TOKEN         – Zugriffsschlüssel von Hugging Face (Rolle „Write“)
+#   Secret   VEREIN_KENNWORT  – Kennwort, das die App für den Server braucht
+#   Variable HF_SPACE         – Name des Space, z. B. „meinname/noten-scanner“
+name: Server zu Hugging Face
+
+on:
+  push:
+    branches: [main]
+    paths: ["server/**", "notenleser/notenleser.py", "notenleser/bildpruefung.py", "notenscanner/**", ".github/workflows/server.yml"]
+  workflow_dispatch:
+
+jobs:
+  hochladen:
+    runs-on: ubuntu-latest
+    if: ${{ vars.HF_SPACE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install huggingface_hub==2.4.0
+      - run: sh server/space_zusammenstellen.sh space
+      - name: In den Space hochladen und einrichten
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+          VEREIN_KENNWORT: ${{ secrets.VEREIN_KENNWORT }}
+          APP_ADRESSE: https://${{ github.repository_owner }}.github.io
+        run: |
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          space = os.environ["HF_SPACE"]
+          besitzer = space.split("/")[0]
+          api.create_repo(space, repo_type="space", space_sdk="docker", exist_ok=True)
+          api.add_space_secret(space, "HF_TOKEN", os.environ["HF_TOKEN"])
+          if os.environ.get("VEREIN_KENNWORT"):
+              api.add_space_secret(space, "VEREIN_KENNWORT", os.environ["VEREIN_KENNWORT"])
+          else:
+              print("::warning::Secret VEREIN_KENNWORT fehlt – der Server nimmt ohne Kennwort keine Aufträge an.")
+          api.add_space_variable(space, "BIBLIOTHEK_REPO", f"{besitzer}/noten-bibliothek")
+          api.add_space_variable(space, "ERLAUBTE_URSPRUENGE", os.environ["APP_ADRESSE"].lower())
+          api.upload_folder(folder_path="space", repo_id=space, repo_type="space", commit_message="Aktualisiert aus GitHub")
+          print("Space aktualisiert:", "https://" + space.replace("/", "-").replace("_", "-").replace(".", "-").lower() + ".hf.space")
+          PY

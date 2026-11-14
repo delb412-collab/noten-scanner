@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+# Ergebnisse und eigene Noten nicht ins Projekt (Urheberrecht!)
+dist/
+app/www/
+app/test/fotos/
+app/test/ausgabe/
+app/vendor/
+
+# Server: lokale Bibliothek und Space-Testordner
+server/bibliothek/
+space/

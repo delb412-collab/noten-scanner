@@ -1,0 +1,7 @@
+opencv-python-headless>=4.5
+numpy>=1.21
+pillow>=9.1
+img2pdf>=0.4
+# optional, aber empfohlen:
+pillow-heif>=0.10   # iPhone-Fotos (.heic)
+pypdfium2>=4.0      # PDFs aus Scanner-Apps als Eingabe
